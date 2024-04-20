@@ -93,10 +93,65 @@ class TypeController extends Controller
     $ids = $request->input('ids');
 
     // ใช้ Eloquent ในการค้นหาข้อมูลโดยใช้ whereIn และ with เพื่อโหลดข้อมูลที่เกี่ยวข้อง
-    $datas = Type::with('items.company.revenue')->whereIn('id', $ids)->get();
+    $types = Type::with('items')->whereIn('id', $ids)->get();
+
+
+        $formattedData = [];
+    
+        foreach ($types as $type) {
+            $formattedItems = [];
+    
+            foreach ($type->items as $item) {
+                $formattedCompanies = [];
+    
+                $companies = Company::query()->where('id',$item->company_id)->get();
+            
+                foreach ($companies as $company) {
+                    $formattedRevenue = [];
+    
+                    $revenues = Company_total::query()->where('company_id',$company->id)->where('type_id',$type->id)->get();
+                    foreach ($revenues as $revenue) {
+                        $formattedRevenue[] = [
+                            "id" => $revenue->id,
+                            "company_id" => $revenue->company_id,
+                            "type_id" => $revenue->type_id,
+                            "year" => $revenue->year,
+                            "total_amount" => $revenue->total_amount
+                        ];
+                    }
+    
+                    $formattedCompanies = [
+                        "id" => $company->id,
+                        "company_name" => $company->company_name,
+                        "short_name" => $company->short_name,
+                        "company_number" => $company->company_number,
+                        "company_amount" => $company->company_amount,
+                        "revenue" => $formattedRevenue
+                    ];
+
+
+                }
+    
+                $formattedItems[] = [
+                    "id" => $item->id,
+                    "company_id" => $item->company_id,
+                    "type_id" => $item->type_id,
+                    "company" => $formattedCompanies
+                ];
+            }
+    
+            $formattedData[] = [
+                "id" => $type->id,
+                "type_name" => $type->type_name,
+                "type_name_th" => $type->type_name_th,
+                "items" => $formattedItems
+            ];
+        }
+
+
 
     // ส่งข้อมูลในรูปแบบ JSON กลับไปยัง client
-    return response()->json($datas);
+    return response()->json($formattedData);
     }
 
 }
