@@ -10,4 +10,5 @@ class Type extends Model
     {
         return $this->hasMany(CompanyType::class,'type_id','id');
     }
+
 }

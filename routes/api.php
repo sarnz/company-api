@@ -21,3 +21,4 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
 
 Route::get('/company/all', [CompanyController::class, 'index']);
 Route::get('/type/all', [TypeController::class, 'index']);
+Route::post('/types', [TypeController::class, 'getByIds']);
